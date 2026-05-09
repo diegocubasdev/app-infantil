@@ -23,17 +23,78 @@ type Frame = {
   particles: Array<{ id: number; x: number; y: number }>
 }
 
-type Obstacle = {
-  top: string
-  bottom: string
-  color: string
+type Character = {
+  emoji: string
+  name: string
 }
 
-const animals = ['🐦', '🐶', '🦆', '🐝']
-const obstacles: Obstacle[] = [
-  { top: '🌳', bottom: '🌳', color: 'from-emerald-300 to-emerald-600' },
-  { top: '☁️', bottom: '🌈', color: 'from-sky-200 to-blue-400' },
-  { top: '🌼', bottom: '🌿', color: 'from-lime-300 to-green-500' },
+type MapTheme = {
+  id: string
+  name: string
+  shellClass: string
+  skyClass: string
+  groundClass: string
+  decoration: string
+  clouds: string[]
+  obstacles: Array<{
+    top: string
+    bottom: string
+    color: string
+  }>
+}
+
+const characters: Character[] = [
+  { emoji: '🐦', name: 'Passarinho' },
+  { emoji: '🐶', name: 'Cachorrinho' },
+  { emoji: '🦆', name: 'Patinho' },
+  { emoji: '🐝', name: 'Abelhinha' },
+  { emoji: '🦋', name: 'Borboleta' },
+  { emoji: '🚀', name: 'Foguete' },
+]
+
+const maps: MapTheme[] = [
+  {
+    id: 'garden',
+    name: 'Jardim',
+    shellClass: 'bg-gradient-to-br from-sky-300 via-cyan-400 to-teal-400',
+    skyClass: 'bg-gradient-to-b from-sky-100 to-sky-300',
+    groundClass: 'bg-gradient-to-r from-lime-400 via-green-300 to-lime-400',
+    decoration: '🌼 🌷 🌼 🌱 🌷 🌼',
+    clouds: ['☁️', '☁️', '🌤️', '☁️'],
+    obstacles: [
+      { top: '🌳', bottom: '🌳', color: 'from-emerald-300 to-emerald-600' },
+      { top: '🌼', bottom: '🌿', color: 'from-lime-300 to-green-500' },
+      { top: '🌈', bottom: '🌳', color: 'from-green-200 to-emerald-500' },
+    ],
+  },
+  {
+    id: 'space',
+    name: 'Espaço',
+    shellClass: 'bg-gradient-to-br from-indigo-500 via-violet-500 to-slate-900',
+    skyClass: 'bg-gradient-to-b from-indigo-900 via-violet-700 to-blue-500',
+    groundClass: 'bg-gradient-to-r from-slate-700 via-indigo-500 to-slate-700',
+    decoration: '⭐ 🌙 ⭐ 🪐 ⭐ 🌙',
+    clouds: ['⭐', '🌙', '🪐', '✨'],
+    obstacles: [
+      { top: '🪐', bottom: '🌙', color: 'from-violet-300 to-indigo-600' },
+      { top: '⭐', bottom: '🚀', color: 'from-blue-300 to-violet-600' },
+      { top: '☄️', bottom: '🪐', color: 'from-pink-300 to-purple-600' },
+    ],
+  },
+  {
+    id: 'candy',
+    name: 'Doces',
+    shellClass: 'bg-gradient-to-br from-pink-300 via-rose-300 to-yellow-300',
+    skyClass: 'bg-gradient-to-b from-pink-100 via-rose-100 to-yellow-100',
+    groundClass: 'bg-gradient-to-r from-pink-300 via-yellow-200 to-pink-300',
+    decoration: '🍬 🧁 🍭 🍬 🧁 🍭',
+    clouds: ['🍬', '☁️', '🍭', '☁️'],
+    obstacles: [
+      { top: '🍭', bottom: '🍭', color: 'from-pink-200 to-rose-400' },
+      { top: '🧁', bottom: '🍬', color: 'from-yellow-200 to-pink-400' },
+      { top: '🍓', bottom: '🍰', color: 'from-rose-200 to-red-400' },
+    ],
+  },
 ]
 
 const initialFrame: Frame = {
@@ -54,8 +115,8 @@ const obstacleWidth = 14
 
 export function FlappyAnimal({ onBack }: FlappyAnimalProps) {
   const [frame, setFrame] = useState<Frame>(initialFrame)
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [animalIndex, setAnimalIndex] = useState(0)
+  const [characterIndex, setCharacterIndex] = useState(0)
+  const [mapIndex, setMapIndex] = useState(0)
   const [obstacleIndex, setObstacleIndex] = useState(0)
   const frameRef = useRef(initialFrame)
   const isPlayingRef = useRef(false)
@@ -64,10 +125,12 @@ export function FlappyAnimal({ onBack }: FlappyAnimalProps) {
   const { bestScore, saveBestScore } = useLocalBestScore('flappy-best-score')
   const { isCelebrating, celebrate } = useCelebration()
 
+  const character = characters[characterIndex]
+  const map = maps[mapIndex]
+
   useEffect(() => {
     function handleVisibilityChange() {
       if (document.hidden) {
-        setIsPlaying(false)
         isPlayingRef.current = false
         frameRef.current = { ...frameRef.current, message: 'Pausado. Toque para voltar.' }
         setFrame(frameRef.current)
@@ -107,12 +170,12 @@ export function FlappyAnimal({ onBack }: FlappyAnimalProps) {
         nextGapY = 30 + Math.random() * 28
         nextScore += 1
         nextMessage = 'Estrela!'
-        setObstacleIndex((index) => (index + 1) % obstacles.length)
+        setObstacleIndex((index) => (index + 1) % map.obstacles.length)
         playSuccessSound()
 
         if (nextScore % 3 === 0) {
           celebrate()
-          speakKidText('Tres estrelas! Voce esta voando muito bem!')
+          speakKidText('Três estrelas! Você está voando muito bem!')
         }
       }
 
@@ -135,7 +198,6 @@ export function FlappyAnimal({ onBack }: FlappyAnimalProps) {
 
         frameRef.current = resetFrame
         setFrame(resetFrame)
-        setIsPlaying(false)
         isPlayingRef.current = false
         playGentleSound()
         speakKidText('Boa tentativa! Vamos de novo.')
@@ -169,13 +231,12 @@ export function FlappyAnimal({ onBack }: FlappyAnimalProps) {
 
     animationId = window.requestAnimationFrame(loop)
     return () => window.cancelAnimationFrame(animationId)
-  }, [celebrate, saveBestScore])
+  }, [celebrate, map.obstacles.length, saveBestScore])
 
   function flap() {
     playTapSound()
 
     if (!isPlayingRef.current) {
-      setIsPlaying(true)
       isPlayingRef.current = true
       frameRef.current = { ...frameRef.current, message: 'Uhuu!', velocity: -1.05 }
       setFrame(frameRef.current)
@@ -187,52 +248,91 @@ export function FlappyAnimal({ onBack }: FlappyAnimalProps) {
     setFrame(nextFrame)
   }
 
-  function changeAnimal() {
+  function resetRun(message: string) {
+    isPlayingRef.current = false
+    const nextFrame = { ...initialFrame, message }
+    frameRef.current = nextFrame
+    setFrame(nextFrame)
+  }
+
+  function chooseCharacter(index: number) {
     playTapSound()
-    setAnimalIndex((index) => (index + 1) % animals.length)
+    setCharacterIndex(index)
+    resetRun(`${characters[index].name} pronto!`)
+  }
+
+  function chooseMap(index: number) {
+    playTapSound()
+    setMapIndex(index)
+    setObstacleIndex(0)
+    resetRun(`Mapa ${maps[index].name}!`)
   }
 
   const rotation = Math.max(-18, Math.min(22, frame.velocity * 22))
   const gapTop = frame.gapY - gapSize / 2
   const gapBottom = 100 - (frame.gapY + gapSize / 2)
-  const obstacle = obstacles[obstacleIndex]
+  const obstacle = map.obstacles[obstacleIndex % map.obstacles.length]
 
   return (
-    <GameShell
-      title="Flappy Animal"
-      onBack={onBack}
-      className="bg-gradient-to-br from-sky-300 via-cyan-400 to-teal-400"
-    >
+    <GameShell title="Flappy Animal" onBack={onBack} className={map.shellClass}>
       <CelebrationOverlay show={isCelebrating} message="Três estrelas!" />
       <section
-        className="relative h-[62dvh] min-h-[450px] touch-none overflow-hidden rounded-[2rem] bg-gradient-to-b from-sky-100 to-sky-300 shadow-2xl ring-4 ring-white/70 sm:h-[calc(100dvh-8rem)] sm:min-h-[520px]"
+        className={`relative h-[64dvh] min-h-[500px] touch-none overflow-hidden rounded-[2rem] ${map.skyClass} shadow-2xl ring-4 ring-white/70 sm:h-[calc(100dvh-8rem)] sm:min-h-[560px]`}
         onPointerDown={flap}
       >
-        {[0, 1, 2, 3].map((cloud) => (
+        {map.clouds.map((cloud, index) => (
           <div
-            key={cloud}
+            key={`${cloud}-${index}`}
             className="absolute text-5xl opacity-80 sm:text-6xl"
-            style={{ left: `${(cloud * 33 - frame.clouds + 110) % 110}%`, top: `${9 + (cloud % 2) * 16}%` }}
+            style={{ left: `${(index * 33 - frame.clouds + 110) % 110}%`, top: `${9 + (index % 2) * 16}%` }}
           >
-            ☁️
+            {cloud}
           </div>
         ))}
 
-        <div className="absolute left-4 top-4 flex flex-wrap gap-3">
+        <div className="absolute left-4 top-4 flex max-w-[calc(100%-2rem)] flex-wrap gap-3">
           <ProgressStars value={frame.score % 3} total={3} label={`⭐ ${frame.score}`} />
           <div className="rounded-3xl bg-white/90 px-5 py-3 text-xl font-black text-slate-800 shadow-xl">
             Recorde {Math.max(bestScore, frame.score)}
           </div>
         </div>
 
-        <button
-          type="button"
+        <div
+          className="absolute right-3 top-24 grid max-w-[48%] grid-cols-3 gap-2 sm:right-4 sm:top-4 sm:max-w-none sm:grid-cols-6"
           onPointerDown={(event) => event.stopPropagation()}
-          onClick={changeAnimal}
-          className="absolute right-4 top-4 rounded-3xl bg-yellow-300 px-5 py-3 text-xl font-black text-slate-800 shadow-xl active:scale-95"
         >
-          Trocar {animals[animalIndex]}
-        </button>
+          {characters.map((item, index) => (
+            <button
+              key={item.name}
+              type="button"
+              onClick={() => chooseCharacter(index)}
+              className={`rounded-2xl bg-white/90 px-3 py-2 text-3xl shadow-xl active:scale-95 ${
+                characterIndex === index ? 'ring-4 ring-yellow-300' : ''
+              }`}
+              aria-label={`Escolher ${item.name}`}
+            >
+              {item.emoji}
+            </button>
+          ))}
+        </div>
+
+        <div
+          className="absolute left-4 top-28 flex max-w-[48%] flex-col gap-2 sm:top-24 sm:max-w-none sm:flex-row"
+          onPointerDown={(event) => event.stopPropagation()}
+        >
+          {maps.map((item, index) => (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => chooseMap(index)}
+              className={`rounded-2xl bg-white/90 px-4 py-3 text-lg font-black text-slate-800 shadow-xl active:scale-95 ${
+                mapIndex === index ? 'ring-4 ring-yellow-300' : ''
+              }`}
+            >
+              {item.name}
+            </button>
+          ))}
+        </div>
 
         <div
           className={`absolute w-16 rounded-b-[2rem] border-x-4 border-white/50 bg-gradient-to-b ${obstacle.color} shadow-xl sm:w-24`}
@@ -261,17 +361,17 @@ export function FlappyAnimal({ onBack }: FlappyAnimalProps) {
           className="absolute left-[28%] -translate-y-1/2 text-6xl drop-shadow-lg transition-transform duration-75 sm:text-7xl"
           style={{ top: `${frame.y}%`, transform: `translateY(-50%) rotate(${rotation}deg)` }}
         >
-          {animals[animalIndex]}
+          {character.emoji}
         </div>
 
         <div
-          className="absolute bottom-0 h-14 w-[220%] bg-gradient-to-r from-lime-400 via-green-300 to-lime-400"
+          className={`absolute bottom-0 h-14 w-[220%] ${map.groundClass}`}
           style={{ transform: `translateX(-${frame.ground}%)` }}
         />
-        <div className="absolute bottom-3 left-0 right-0 flex justify-around text-3xl">🌼 🌷 🌼 🌱 🌷 🌼</div>
+        <div className="absolute bottom-3 left-0 right-0 flex justify-around text-3xl">{map.decoration}</div>
 
         <div className="absolute bottom-20 left-1/2 w-[calc(100%-2rem)] -translate-x-1/2 rounded-3xl bg-white/90 px-5 py-3 text-center text-2xl font-black text-slate-800 shadow-xl sm:w-auto sm:px-8 sm:text-3xl">
-          {isPlaying ? frame.message : frame.message}
+          {frame.message}
         </div>
       </section>
     </GameShell>
