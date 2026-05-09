@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Mundo da Diversao">
+  <rect width="512" height="512" rx="112" fill="#38bdf8"/>
+  <circle cx="156" cy="158" r="70" fill="#fde047"/>
+  <circle cx="354" cy="166" r="72" fill="#fb7185"/>
+  <circle cx="252" cy="332" r="104" fill="#a3e635"/>
+  <path d="M144 296a112 112 0 0 1 224 0" fill="none" stroke="#ef4444" stroke-width="26" stroke-linecap="round"/>
+  <path d="M180 296a76 76 0 0 1 152 0" fill="none" stroke="#facc15" stroke-width="26" stroke-linecap="round"/>
+  <path d="M216 296a40 40 0 0 1 80 0" fill="none" stroke="#22c55e" stroke-width="26" stroke-linecap="round"/>
+  <path d="M156 383c54 44 145 44 199 0" fill="none" stroke="#ffffff" stroke-width="30" stroke-linecap="round"/>
+</svg>
